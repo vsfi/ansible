@@ -2,6 +2,7 @@
 
 - hosts: vsfi-host
   remote_user: root
+  connection: local
   tasks:
     - name: Setup LXD profile
       lxd_profile:

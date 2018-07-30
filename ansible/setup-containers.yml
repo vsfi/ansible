@@ -2,6 +2,7 @@
 
 - hosts: vsfi-host
   remote_user: root
+  connection: local
   vars:
     vsfi_hostname: vsfi
     vsfi_host_containers:
@@ -10,21 +11,21 @@
       - { name: "team3", state: "restarted" }
       - { name: "team4", state: "restarted" }
       - { name: "team5", state: "restarted" }
-      # - { name: "team6", state: "restarted" }
-      # - { name: "team7", state: "restarted" }
-      # - { name: "team8", state: "restarted" }
-      # - { name: "team9", state: "restarted" }
-      # - { name: "team10", state: "restarted" }
-      # - { name: "team11", state: "restarted" }
-      # - { name: "team12", state: "restarted" }
-      # - { name: "team13", state: "restarted" }
-      # - { name: "team14", state: "restarted" }
-      # - { name: "team15", state: "restarted" }
-      # - { name: "team16", state: "restarted" }
-      # - { name: "team17", state: "restarted" }
-      # - { name: "team18", state: "restarted" }
-      # - { name: "team19", state: "restarted" }
-      # - { name: "team20", state: "restarted" }
+      - { name: "team6", state: "restarted" }
+      - { name: "team7", state: "restarted" }
+      - { name: "team8", state: "restarted" }
+      - { name: "team9", state: "restarted" }
+      - { name: "team10", state: "restarted" }
+      - { name: "team11", state: "restarted" }
+      - { name: "team12", state: "restarted" }
+      - { name: "team13", state: "restarted" }
+      - { name: "team14", state: "restarted" }
+      - { name: "team15", state: "restarted" }
+      - { name: "team16", state: "restarted" }
+      - { name: "team17", state: "restarted" }
+      - { name: "team18", state: "restarted" }
+      - { name: "team19", state: "restarted" }
+      - { name: "team20", state: "restarted" }
   tasks:
     - name: Launch containers
       lxd_container:

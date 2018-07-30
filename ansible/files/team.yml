@@ -2,6 +2,7 @@
 
 - hosts: vsfi
   remote_user: root
+  connection: local
   tasks:
     - name: ping
       ping: 

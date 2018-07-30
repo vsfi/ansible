@@ -2,6 +2,7 @@
 
 - hosts: vsfi-host
   remote_user: root
+  connection: local
   vars:
     netplan_config_file:      /etc/netplan/config.yaml
     netplan_remove_existing:  true
