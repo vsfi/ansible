@@ -2,6 +2,7 @@
 resolv-file=/etc/dnsmasq-resolv.conf
 conf-file=/etc/dnsmasq-resolvconf.conf
 no-dhcp-interface={{vsfi_host_uplink_if}}
+server=8.8.8.8
 {% for net in vsfi_host_networks %}
 listen-address={{net.addr}}
 {% endfor %}
