@@ -1,0 +1,126 @@
+---
+
+- hosts: vsfi-host
+  remote_user: root
+  vars:
+    netplan_config_file:      /etc/netplan/config.yaml
+    netplan_remove_existing:  true
+    vsfi_host_dnsmasq:
+    vsfi_host_uplink_if: enp0s3
+    vsfi_host_networks:
+      - { addr: 192.168.11.1 }
+    vsfi_host_pkg:
+      - lxd
+      - mtr
+      - mc
+      - bridge-utils
+      - dnsmasq
+      - iptables-persistent
+      - ansible
+    vsfi_host_pkg_remove:
+      - snapd
+    vsfi_host_hostname: "vsfi-host"
+    netplan_configuration:
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          enp0s3:
+            dhcp6: false
+            dhcp4: true
+        bridges:
+          br0:
+            interfaces: []
+            optional: true
+            parameters:
+              stp: false
+              forward-delay: 0
+            addresses:
+              - 192.168.11.1/24
+  handlers:
+    - name: restart dnsmasq
+      service:
+        name: dnsmasq
+        state: restarted
+        enabled: yes
+  tasks:
+    - name: Setup timezone
+      timezone: 
+        name: Europe/Samara
+
+    - name: Setup hostname
+      hostname:
+        name: "{{ vsfi_host_hostname | default('vsfi-host')}}"
+
+    - name: Install packages
+      package:
+        name: "{{ vsfi_host_pkg }}"
+        state: present
+
+    - name: Remove packages
+      package:
+        name: "{{ vsfi_host_pkg_remove }}"
+        state: absent
+
+    - name:       Capturing Existing Configurations
+      find:
+        paths:    /etc/netplan
+        patterns: "*.yml,*.yaml"
+      become:     true
+      register:   _netplan_configs
+
+    - debug:      var=_netplan_configs
+
+    - name:       Removing Existing Configurations
+      file:
+        path:     "{{ item['path'] }}"
+        state:    absent
+      become:     true
+      with_items: "{{ _netplan_configs['files'] }}"
+      when:       >
+          netplan_remove_existing and
+          item['path'] != netplan_config_file and
+          netplan_configuration != []
+
+    - name:       Configuring Netplan
+      template:
+        src:      templates/netplan_config.yml.j2
+        dest:     "{{ netplan_config_file }}"
+      become:     true
+      register:   _netplan_configured
+      when:       netplan_configuration != []
+
+    - name:       Generating Netplan Configuration
+      command:    netplan generate
+      become:     true
+      register:   _netplan_generated
+      when:       _netplan_configured['changed']
+
+    - name:       Applying Netplan Configuration
+      command:    netplan apply
+      become:     true
+      when:       _netplan_generated['changed']
+    - name: setup mine dnsmasq
+      template:
+        src: templates/dnsmasq.conf.j2
+        dest: /etc/dnsmasq.conf
+      notify:  restart dnsmasq
+
+    - name: setup sub dnsmasq
+      template:
+        src: templates/dnsmasq-dhcp.conf.j2
+        dest: /etc/dnsmasq.d/dhcp.conf
+      notify:  restart dnsmasq
+
+    - sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        sysctl_set: yes
+
+    - name: Ensure MASQUERADE enabled
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: "enp0s3"
+        jump: MASQUERADE
+        comment: Enable NAT

@@ -1,0 +1,20 @@
+---
+
+- hosts: vsfi-host
+  remote_user: root
+  tasks:
+    - name: Setup LXD profile
+      lxd_profile:
+        name: br0
+        state: present
+        config: {} 
+        description: vsfi-bridge
+        devices:
+          eth0:
+            nictype: bridged
+            parent: br0
+            type: nic
+          root:
+            path: /
+            pool: "default"
+            type: "disk"

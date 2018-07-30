@@ -1,0 +1,2 @@
+[vsfi-host]
+127.0.0.1 ansible_port=2222 vsfi_host_hostname=vsfi-host

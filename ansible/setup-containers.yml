@@ -1,0 +1,76 @@
+---
+
+- hosts: vsfi-host
+  remote_user: root
+  vars:
+    vsfi_hostname: vsfi
+    vsfi_host_containers:
+      - { name: "team1", state: "restarted" }
+      - { name: "team2", state: "restarted" }
+      - { name: "team3", state: "restarted" }
+      - { name: "team4", state: "restarted" }
+      - { name: "team5", state: "restarted" }
+      # - { name: "team6", state: "restarted" }
+      # - { name: "team7", state: "restarted" }
+      # - { name: "team8", state: "restarted" }
+      # - { name: "team9", state: "restarted" }
+      # - { name: "team10", state: "restarted" }
+      # - { name: "team11", state: "restarted" }
+      # - { name: "team12", state: "restarted" }
+      # - { name: "team13", state: "restarted" }
+      # - { name: "team14", state: "restarted" }
+      # - { name: "team15", state: "restarted" }
+      # - { name: "team16", state: "restarted" }
+      # - { name: "team17", state: "restarted" }
+      # - { name: "team18", state: "restarted" }
+      # - { name: "team19", state: "restarted" }
+      # - { name: "team20", state: "restarted" }
+  tasks:
+    - name: Launch containers
+      lxd_container:
+        name: "{{ item.name }}"
+        state: "{{ item.state }}"
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          protocol: lxd
+          alias: alpine/edge/amd64
+        profiles: ["br0"]
+        wait_for_ipv4_addresses: true
+        timeout: 600
+      with_items: "{{ vsfi_host_containers }}"
+    
+    - name: define inventory
+      add_host:
+        name: "{{ item.name }}"
+        groups: vsfi-host
+        ansible_connection: lxd
+      with_items: "{{ vsfi_host_containers }}"
+    
+    - name: install tools
+      shell: lxc exec {{ item.name}} -- apk add python openssh-server
+      with_items: "{{ vsfi_host_containers }}"
+
+    - name: setup ssh in containers
+      shell: lxc exec {{ item.name}} -- setup-sshd -c openssh
+      with_items: "{{ vsfi_host_containers }}"
+
+    - name: setup permit root login
+      shell: lxc exec {{ item.name}} -- sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+      with_items: "{{ vsfi_host_containers }}"
+
+    - name: setup permit root login
+      shell: lxc exec {{ item.name}} -- mkdir /root/.ssh
+      with_items: "{{ vsfi_host_containers }}"
+
+    - name: setup restart ssh
+      shell: lxc exec {{ item.name}} -- services sshd restart
+      ignore_errors: yes
+      changed_when: false
+      with_items: "{{ vsfi_host_containers }}"
+    
+    - name: setup push ssh keys
+      shell: lxc file push /root/.ssh/id_rsa.pub {{ item.name }}/root/.ssh/authorized_keys
+      with_items: "{{ vsfi_host_containers }}"
+    
