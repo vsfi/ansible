@@ -2,7 +2,17 @@
 
 - hosts: vsfi
   remote_user: root
-  connection: local
   tasks:
     - name: ping
-      ping: 
+      ping:
+    
+    - name: change hostname
+      hostname: 
+        name: "{{ vsfi_hostname }}"
+        
+    - name:  Setup motd
+      template:
+        src: motd.j2
+        dest: /etc/motd
+        mode: 0644
+        owner: root

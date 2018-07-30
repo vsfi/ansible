@@ -62,7 +62,7 @@
       with_items: "{{ vsfi_host_containers }}"
 
     - name: setup permit root login
-      shell: lxc exec {{ item.name}} -- mkdir /root/.ssh
+      shell: lxc exec {{ item.name}} -- mkdir -p /root/.ssh
       with_items: "{{ vsfi_host_containers }}"
 
     - name: setup restart ssh
